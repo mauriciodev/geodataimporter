@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "django.contrib.gis",
     'importservice'
 ]
 
@@ -75,9 +76,14 @@ WSGI_APPLICATION = 'geodataimporter.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.spatialite',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
+    #"default": { #https://docs.djangoproject.com/en/5.2/ref/databases/
+    #    "ENGINE": "django.contrib.gis.db.backends.postgis",
+    #    "NAME": "geodjango",
+    #    "USER": "geo",
+    #},
 }
 
 
