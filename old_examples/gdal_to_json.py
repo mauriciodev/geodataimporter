@@ -1,6 +1,12 @@
 from osgeo import ogr
 import json
-fname = "estacoes.gpkg"
+import os
+
+fname = "old_examples/estacoes.gpkg"
+
+# Caminho absoluto com base no local do script
+base_dir = os.path.dirname(__file__)
+fname = os.path.join(base_dir, "old_examples", "estacoes.gpkg")
 
 datasource = ogr.Open(fname)
 
@@ -8,7 +14,6 @@ datasource = ogr.Open(fname)
 # Entradas opcionais: metadata_id, data_do_produto e escala
 
 metadata_id = ''
-
 for layer in datasource:
     print(layer.GetName())
     for feature in layer:

@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 import datetime
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -11,3 +12,6 @@ def current_datetime(request):
     return HttpResponse(html)
 
 # Create your views here.
+@api_view(["GET"])
+def acesso(request):
+    return Response({"mensagem": "Hello, world!"})
