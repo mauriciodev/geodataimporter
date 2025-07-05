@@ -3,6 +3,9 @@ from django.http import HttpResponse
 import datetime
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import viewsets
+from .models import Importar_Arquivo
+from .serializers import Importar_Arquivo_Serializer
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -11,7 +14,12 @@ def current_datetime(request):
     html = '<html lang="en"><body>Boa tarde,  %s.</body></html>' % name
     return HttpResponse(html)
 
-# Create your views here.
+# Criar um ponto de acesso no DRF (hello world). Responder um objeto json como rest.
 @api_view(["GET"])
 def acesso(request):
     return Response({"mensagem": "Hello, world!"})
+
+# Enviar arquivos por drf
+class Importar_Arquivo_ViewSet(viewsets.ModelViewSet):
+    queryset = Importar_Arquivo.objects.all()
+    serializer_class = Importar_Arquivo_Serializer
