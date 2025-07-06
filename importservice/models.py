@@ -4,7 +4,6 @@ from django.db import models
 from django.contrib.gis.db import models
 import uuid
 #from django.db import models
-from django.contrib.gis.db import models
 
 class product_index(models.Model):
     area = models.MultiPolygonField()
