@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import viewsets
 from .models import Importar_Arquivo
 from .serializers import Importar_Arquivo_Serializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -23,3 +24,4 @@ def acesso(request):
 class Importar_Arquivo_ViewSet(viewsets.ModelViewSet):
     queryset = Importar_Arquivo.objects.all()
     serializer_class = Importar_Arquivo_Serializer
+    parser_classes = [MultiPartParser, FormParser]

@@ -3,6 +3,8 @@ from django.db import models
 # Create your models here.
 from django.contrib.gis.db import models
 import uuid
+#from django.db import models
+from django.contrib.gis.db import models
 
 class product_index(models.Model):
     area = models.MultiPolygonField()
@@ -13,8 +15,6 @@ class product_index(models.Model):
     def __str__(self):
         return f"{self.metadataid}: {self.file_path}" 
     
-from django.db import models
-
 class Importar_Arquivo(models.Model):
     nome = models.CharField(max_length=255)
     arquivo = models.FileField(upload_to='uploads/')
