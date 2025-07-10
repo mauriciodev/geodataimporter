@@ -2,19 +2,21 @@ import os
 import json
 import xml.etree.ElementTree as ET
 from osgeo import ogr, osr
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 ogr.UseExceptions()
 
 # Configurações do banco
 CONFIG_BASE = {
-    "user": "postgres",
-    "password": "postgres",
-    "host": "localhost",
-    "port": "5433",
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
 }
-CONFIG_BANCO = {**CONFIG_BASE, "dbname": "pfc2025"}
+CONFIG_BANCO = {**CONFIG_BASE, "dbname": os.getenv("DB_NAME")}
 TABELA_GLOBAL = "importacao_geometrias"
-PASTA_ARQUIVOS = r"C:\\Users\\gabri\\OneDrive\\Área de Trabalho\\Estudos\\Eng Cartografica\\5.1\\PFC\\arquivos"
+PASTA_ARQUIVOS = os.getenv("PASTA_ARQUIVOS")
 
 # Impressão segura no console
 def safe_print(msg):
