@@ -1,6 +1,6 @@
 ## 🗺️ GeoData Importer
 
-Este projeto importa arquivos vetoriais (GPKG e ZIP com shapefiles) para uma tabela PostGIS, extraindo metadados associados a partir de arquivos XML. É parte de um sistema de ingestão de dados geoespaciais.
+Este projeto visa desenvolver um sistema de importação, armazenamento e padronização de dados vetoriais geoespaciais em banco de dados PostGIS, permitindo integrar diferentes estruturas como EDGV 2.1.3, EDGV 3.0 e modelagens do IBGE. O sistema extrai metadados, converte atributos para objetos JSON e organiza as geometrias de forma normalizada, apoiando a interoperabilidade e exibição em servidores de mapas.
 
 ---
 
@@ -50,7 +50,7 @@ source venv/bin/activate
 venv\Scripts\activate
 
 ## 3 Instale as dependências
-conda install -r requirements.txt
+conda create --name geoenv --file requirements.txt
 
 ## 4 Configuração do .env
 # Copie o exemplo:
