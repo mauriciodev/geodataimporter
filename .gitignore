@@ -135,6 +135,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env/
+.envrc
 
 # Spyder project settings
 .spyderproject
@@ -175,3 +177,16 @@ cython_debug/
 
 importservice/media/
 importservice/migrations/
+.vscode/launch.json
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Exceções do VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
