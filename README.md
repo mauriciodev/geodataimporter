@@ -39,19 +39,19 @@ A pasta definida na variável `PASTA_ARQUIVOS` deve conter arquivos:
 git clone https://github.com/seu_usuario/seu_repositorio.git
 cd seu_repositorio
 
-## 2 Crie e ative o ambiente Conda
+## 2 Crie e ative o ambiente Conda e as dependências 
 
 conda env create -f environment.yml
 conda activate PFC_new
 
 🔁 O nome do ambiente (PFC_new) será aquele definido no environment.yml.
 
-## 4 Configuração do .env
+## 3 Configuração do .env
 
 # Copie o exemplo:
 cp .env.example .env  # Linux/macOS
 copy .env.example .env  # Windows
 # Após isso, edite o novo .env com seus dados reais.
 
-## 5 Execute o script de importação
+## 4 Execute o script de importação
 python ogr_importer.py
