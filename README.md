@@ -1,20 +1,19 @@
-## 🗺️ GeoData Importer
+### 🗺️ GeoData Importer
 
 Este projeto visa desenvolver um sistema de importação, armazenamento e padronização de dados vetoriais geoespaciais em banco de dados PostGIS, permitindo integrar diferentes estruturas como EDGV 2.1.3, EDGV 3.0 e modelagens do IBGE. O sistema extrai metadados, converte atributos para objetos JSON e organiza as geometrias de forma normalizada, apoiando a interoperabilidade e exibição em servidores de mapas.
 
 ---
 
-## 🛠️ Requisitos do Sistema
+### 🛠️ Requisitos do Sistema
 
 Antes de rodar o projeto, verifique se seu ambiente atende aos seguintes pré-requisitos:
 
 - **Python 3.8 ou superior**  
   Instale pelo [site oficial](https://www.python.org/downloads/) ou via gerenciador de pacotes da sua distribuição.
 
-- **Bibliotecas Python**  
-  Instaladas automaticamente via `conda' pelo arquivo `requirements.txt`:
-  - `python-dotenv==1.1.0`
-  - `gdal==3.1.1`
+- **Conda (Miniconda ou Anaconda)**  
+  Recomendado para gerenciamento de ambientes.  
+  [Miniconda](https://docs.conda.io/en/latest/miniconda.html) ou [Anaconda](https://www.anaconda.com/products/distribution)
 
 - **PostgreSQL com extensão PostGIS ativada**  
   Banco de dados espacial necessário para armazenar os dados vetoriais.  
@@ -23,7 +22,7 @@ Antes de rodar o projeto, verifique se seu ambiente atende aos seguintes pré-re
 
 ---
 
-## 📂 Estrutura esperada dos arquivos
+### 📂 Estrutura esperada dos arquivos
 
 A pasta definida na variável `PASTA_ARQUIVOS` deve conter arquivos:
 
@@ -32,27 +31,23 @@ A pasta definida na variável `PASTA_ARQUIVOS` deve conter arquivos:
 
 ---
 
-## ⚙️ Configuração
+### ⚙️ Configuração
 
-### 1. Clone o repositório
+## 1. Clone o repositório
 
 ```bash
 git clone https://github.com/seu_usuario/seu_repositorio.git
 cd seu_repositorio
 
-## 2 Ambiente virtual (recomendado que crie um)
+## 2 Crie e ative o ambiente Conda
 
-python -m venv venv
-# Ative:
-# Linux/macOS:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
+conda env create -f environment.yml
+conda activate PFC_new
 
-## 3 Instale as dependências
-conda create --name geoenv --file requirements.txt
+🔁 O nome do ambiente (PFC_new) será aquele definido no environment.yml.
 
 ## 4 Configuração do .env
+
 # Copie o exemplo:
 cp .env.example .env  # Linux/macOS
 copy .env.example .env  # Windows
