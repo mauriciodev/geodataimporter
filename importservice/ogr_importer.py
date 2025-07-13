@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 from osgeo import ogr, osr
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 ogr.UseExceptions()
 
@@ -17,6 +19,50 @@ CONFIG_BASE = {
 CONFIG_BANCO = {**CONFIG_BASE, "dbname": os.getenv("DB_NAME")}
 TABELA_GLOBAL = "importacao_geometrias"
 PASTA_ARQUIVOS = os.getenv("PASTA_ARQUIVOS")
+
+def criar_banco_postgis(nome_banco):
+    try:
+        conn = psycopg2.connect(
+            dbname='postgres',  # conecta no banco padrão para criar o seu
+            user=CONFIG_BASE['user'],
+            password=CONFIG_BASE['password'],
+            host=CONFIG_BASE['host'],
+            port=CONFIG_BASE['port']
+        )
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s;", (nome_banco,))
+        if cursor.fetchone():
+            print(f"🗃️ Banco '{nome_banco}' já existe.")
+        else:
+            cursor.execute(f'CREATE DATABASE "{nome_banco}";')
+            print(f"✅ Banco '{nome_banco}' criado com sucesso.")
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Erro ao criar banco: {e}")
+
+def ativar_postgis(nome_banco):
+    try:
+        conn = psycopg2.connect(
+            dbname=nome_banco,
+            user=CONFIG_BASE['user'],
+            password=CONFIG_BASE['password'],
+            host=CONFIG_BASE['host'],
+            port=CONFIG_BASE['port']
+        )
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = conn.cursor()
+
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+        print(f"🧩 Extensão PostGIS ativada no banco '{nome_banco}'.")
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Erro ao ativar PostGIS: {e}")
 
 # Impressão segura no console
 def safe_print(msg):
@@ -194,6 +240,12 @@ def find_xml_for_file(caminho_arquivo):
 
 # Execução principal
 if __name__ == "__main__":
+    nome_banco = CONFIG_BANCO["dbname"]
+    # Cria banco se não existir
+    criar_banco_postgis(nome_banco)
+    # Ativa PostGIS no banco
+    ativar_postgis(nome_banco)
+    # Monta string de conexão GDAL
     conn_str = "PG: " + ' '.join(f"{k}={v}" for k, v in CONFIG_BANCO.items())
     verificar_ou_criar_tabela(TABELA_GLOBAL, conn_str)
 
