@@ -1,13 +1,16 @@
-from .views import acesso
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import Importar_Arquivo_ViewSet
-from rest_framework import routers
-
-router = routers.DefaultRouter()
-router.register(r'arquivos', Importar_Arquivo_ViewSet)
+from django.urls import path
+from .views import (
+    UploadArquivoView,
+    RemoverProdutoView,
+    ListarProdutosView,
+    ListarHistoricoView,
+    ApiRootView
+)
 
 urlpatterns = [
-    path("hello/", acesso),
-    path('', include(router.urls)),
+    path("", ApiRootView.as_view(), name="api-root"),
+    path("importar/", UploadArquivoView.as_view(), name="importar"),
+    path("remover/<str:metadata_id>/", RemoverProdutoView.as_view(), name="remover"),
+    path("produtos/", ListarProdutosView.as_view(), name="listar_produtos"),
+    path("historico/", ListarHistoricoView.as_view(), name="historico"),
 ]
