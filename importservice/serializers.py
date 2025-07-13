@@ -1,8 +1,26 @@
 from rest_framework import serializers
-from .models import Importar_Arquivo
+from .models import (
+    HistoricoImportacaoExclusao,
+    ProdutoGeoespacial,
+    product_index
+)
 
-class Importar_Arquivo_Serializer(serializers.ModelSerializer):
+
+class HistoricoImportacaoExclusaoSerializer(serializers.ModelSerializer):
+    usuario = serializers.StringRelatedField(read_only=True)
+
     class Meta:
-        model = Importar_Arquivo
+        model = HistoricoImportacaoExclusao
         fields = '__all__'
-        read_only_fields = ['data_upload']
+
+
+class ProdutoGeoespacialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProdutoGeoespacial
+        fields = '__all__'
+
+
+class ProductIndexSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = product_index
+        fields = '__all__'
