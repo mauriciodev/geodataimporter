@@ -83,7 +83,7 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(srid)
 
-    layer = ds.CreateLayer(table_name, srs, geom_type=ogr.wkbUnknown)
+    layer = ds.CreateLayer(table_name,srs,geom_type=ogr.wkbUnknown,options=['GEOMETRY_NAME=wkb_geometry', 'DIM=2'])
     if layer is None:
         raise RuntimeError("❌ Falha ao criar a camada.")
 
@@ -101,7 +101,36 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
         campo.SetWidth(512)
         layer.CreateField(campo)
 
+    ds = None
     print(f"✅ Tabela '{table_name}' criada com sucesso.")
+
+    criar_indices_pos_importacao(table_name)
+
+
+def criar_indices_pos_importacao(table_name):
+    try:
+        conn = psycopg2.connect(**CONFIG_BANCO)
+        cursor = conn.cursor()
+
+        # Índice para a coluna "classe"
+        cursor.execute(f"""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes WHERE tablename = %s AND indexname = %s
+                ) THEN
+                    EXECUTE 'CREATE INDEX idx_{table_name}_classe ON {table_name} (classe)';
+                END IF;
+            END$$;
+        """, (table_name, f"idx_{table_name}_classe"))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        safe_print(f"✅ Índice da coluna 'classe' criado na tabela {table_name}.")
+
+    except Exception as e:
+        print(f"❌ Erro ao criar índices na tabela {table_name}: {e}")
 
 # Extração de metadados do XML
 def extrair_edgv_com_versao_oficial(xml_path, namespaces):
