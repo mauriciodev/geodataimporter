@@ -106,6 +106,7 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
 
         print(f"✅ Tabela '{table_name}' criada com sucesso.")
 
+    ds = None
     try:
         conn_pg = psycopg2.connect(**CONFIG_BANCO)
         cur = conn_pg.cursor()
@@ -121,7 +122,6 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
     except Exception as e:
         print(f"❌ Erro ao converter campo para JSONB: {e}")
 
-    ds = None
     criar_indices_pos_importacao(table_name)
 
 def criar_indices_pos_importacao(table_name):
