@@ -76,34 +76,36 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
 
     if ds.GetLayerByName(table_name):
         print(f"🧾 Tabela '{table_name}' já existe.")
-        return
+    else:
+        print(f"📐 Criando tabela '{table_name}'...")
 
-    print(f"📐 Criando tabela '{table_name}'...")
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(srid)
 
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(srid)
+        layer = ds.CreateLayer(table_name, srs, geom_type=ogr.wkbUnknown,
+                               options=['GEOMETRY_NAME=wkb_geometry', 'DIM=2'])
+        if layer is None:
+            raise RuntimeError("❌ Falha ao criar a camada.")
 
-    layer = ds.CreateLayer(table_name,srs,geom_type=ogr.wkbUnknown,options=['GEOMETRY_NAME=wkb_geometry', 'DIM=2'])
-    if layer is None:
-        raise RuntimeError("❌ Falha ao criar a camada.")
+        campos = [
+            ("json", ogr.OFTString, 16384),
+            ("classe", ogr.OFTString, 1024),
+            ("metadata_id", ogr.OFTString, 1024),
+            ("escala", ogr.OFTString, 64),
+            ("data_do_produto", ogr.OFTDate, None),
+            ("esquema", ogr.OFTString, 1024)
+        ]
 
-    campos = [
-        ("json", ogr.OFTString),
-        ("classe", ogr.OFTString),
-        ("metadata_id", ogr.OFTString),
-        ("escala", ogr.OFTString),
-        ("data_do_produto", ogr.OFTString),
-        ("esquema", ogr.OFTString)
-    ]
+        for nome, tipo, tamanho in campos:
+            campo = ogr.FieldDefn(nome, tipo)
+            if tamanho:
+                campo.SetWidth(tamanho)
+            layer.CreateField(campo)
 
-    for nome, tipo in campos:
-        campo = ogr.FieldDefn(nome, tipo)
-        campo.SetWidth(512)
-        layer.CreateField(campo)
+        print(f"✅ Tabela '{table_name}' criada com sucesso.")
 
     ds = None
-    print(f"✅ Tabela '{table_name}' criada com sucesso.")
-
+    #registrar_geometry_column_postgis(table_name, "wkb_geometry", srid=4326, geom_type="GEOMETRY")
     criar_indices_pos_importacao(table_name)
 
 
@@ -132,6 +134,33 @@ def criar_indices_pos_importacao(table_name):
     except Exception as e:
         print(f"❌ Erro ao criar índices na tabela {table_name}: {e}")
 
+'''def registrar_geometry_column_postgis(table_name, column_name="wkb_geometry", srid=4326, geom_type="GEOMETRY", dim=2):
+    try:
+        conn = psycopg2.connect(**CONFIG_BANCO)
+        cursor = conn.cursor()
+
+        cursor.execute(f"""
+            SELECT 1 FROM geometry_columns
+            WHERE f_table_name = %s AND f_geometry_column = %s
+        """, (table_name, column_name))
+        exists = cursor.fetchone()
+
+        if not exists:
+            cursor.execute(f"""
+                SELECT AddGeometryColumn(
+                    'public', %s, %s, %s, %s, %s
+                );
+            """, (table_name, column_name, srid, geom_type, dim))
+            safe_print(f"📌 AddGeometryColumn executado com sucesso em '{table_name}.{column_name}'.")
+        else:
+            safe_print(f"ℹ️ AddGeometryColumn pulado: entrada já existe para '{table_name}.{column_name}'.")
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        safe_print(f"❌ Erro ao executar AddGeometryColumn: {e}")
+'''
 # Extração de metadados do XML
 def extrair_edgv_com_versao_oficial(xml_path, namespaces):
     try:
