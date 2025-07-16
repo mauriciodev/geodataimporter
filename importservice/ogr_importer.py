@@ -82,32 +82,47 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(srid)
 
-        layer = ds.CreateLayer(table_name, srs, geom_type=ogr.wkbUnknown,
-                               options=['GEOMETRY_NAME=wkb_geometry', 'DIM=2'])
+        layer = ds.CreateLayer(
+            table_name, srs,
+            geom_type=ogr.wkbUnknown,
+            options=['GEOMETRY_NAME=wkb_geometry', 'DIM=2']
+        )
         if layer is None:
             raise RuntimeError("❌ Falha ao criar a camada.")
 
         campos = [
-            ("json", ogr.OFTString, 16384),
-            ("classe", ogr.OFTString, 1024),
-            ("metadata_id", ogr.OFTString, 1024),
-            ("escala", ogr.OFTString, 64),
-            ("data_do_produto", ogr.OFTDate, None),
-            ("esquema", ogr.OFTString, 1024)
+            ("json", ogr.OFTString),     
+            ("classe", ogr.OFTString),
+            ("metadata_id", ogr.OFTString),
+            ("escala", ogr.OFTString),
+            ("data_do_produto", ogr.OFTDate),
+            ("esquema", ogr.OFTString)
         ]
 
-        for nome, tipo, tamanho in campos:
+        for nome, tipo in campos:
             campo = ogr.FieldDefn(nome, tipo)
-            if tamanho:
-                campo.SetWidth(tamanho)
+            campo.SetWidth(2048)
             layer.CreateField(campo)
 
         print(f"✅ Tabela '{table_name}' criada com sucesso.")
 
-    ds = None
-    #registrar_geometry_column_postgis(table_name, "wkb_geometry", srid=4326, geom_type="GEOMETRY")
-    criar_indices_pos_importacao(table_name)
+    try:
+        conn_pg = psycopg2.connect(**CONFIG_BANCO)
+        cur = conn_pg.cursor()
+        cur.execute(f"""
+            ALTER TABLE {table_name}
+            ALTER COLUMN json TYPE JSONB
+            USING json::jsonb;
+        """)
+        conn_pg.commit()
+        cur.close()
+        conn_pg.close()
+        print("🧬 Campo 'json' convertido para JSONB com sucesso.")
+    except Exception as e:
+        print(f"❌ Erro ao converter campo para JSONB: {e}")
 
+    ds = None
+    criar_indices_pos_importacao(table_name)
 
 def criar_indices_pos_importacao(table_name):
     try:
