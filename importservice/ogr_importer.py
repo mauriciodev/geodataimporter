@@ -1,5 +1,6 @@
 import os
 import json
+import zipfile
 import xml.etree.ElementTree as ET
 from osgeo import ogr, osr
 from dotenv import load_dotenv
@@ -181,13 +182,18 @@ def extrair_edgv_com_versao_oficial(xml_path, namespaces):
     try:
         tree = ET.parse(xml_path)
         root = tree.getroot()
-        title = root.find('.//gmd:title/gco:CharacterString', namespaces)
-        edition = root.find('.//gmd:edition/gco:CharacterString', namespaces)
-        edition_date = root.find('.//gmd:editionDate/gco:Date', namespaces)
-        return f"{title.text} {edition.text} {edition_date.text}" if title is not None else "EDGV"
+
+        citations = root.findall('.//gmd:featureCatalogueCitation/gmd:CI_Citation', namespaces)
+        for cit in citations:
+            title = cit.find('gmd:title/gco:CharacterString', namespaces)
+            edition = cit.find('gmd:edition/gco:CharacterString', namespaces)
+
+            if title is not None and edition is not None:
+                return f"{title.text.strip()} {edition.text.strip()}"
+        return "EDGV"
     except Exception as e:
         print(f"Erro ao processar XML (extrair_edgv): {e}")
-        return None
+    return None
 
 def extract_metadata_from_xml(arquivo_xml):
     escala = data_do_produto = esquema = metadata_id = None
@@ -220,12 +226,43 @@ def extract_metadata_from_xml(arquivo_xml):
     return escala, data_do_produto, esquema, metadata_id
 
 # Abre GPKG ou ZIP
-def abrir_datasource(caminho):
+def abrir_datasources(caminho):
     ext = os.path.splitext(caminho)[1].lower()
-    caminho_gdal = caminho.replace("\\", "/")
+    vsi = os.path.abspath(caminho).replace("\\", "/")
+    
     if ext == ".zip":
-        caminho_gdal = f"/vsizip/{caminho_gdal}"
-    return ogr.Open(caminho_gdal)
+        root = f"/vsizip/{vsi}"
+        datas = []
+
+        # log e extração dos shapefiles dentro do ZIP
+        with zipfile.ZipFile(caminho, "r") as zf:
+            safe_print("📁 Conteúdo do ZIP:")
+            for name in zf.namelist():
+                safe_print(f" - {name}")
+
+            shp_files = [n for n in zf.namelist() if n.lower().endswith(".shp")]
+
+        if not shp_files:
+            safe_print("⚠️ Nenhum arquivo .shp encontrado dentro do ZIP.")
+            return []
+
+        for shp in shp_files:
+            uri = f"/vsizip/{vsi}/{shp}"
+            try:
+                ds_shp = ogr.Open(uri)
+                if ds_shp and ds_shp.GetLayerCount() > 0:
+                    datas.append(ds_shp)
+                    safe_print(f"✅ Shapefile carregado: {shp}")
+                else:
+                    safe_print(f"⚠️ Ignorado: '{shp}' não contém camadas válidas.")
+            except Exception as e:
+                safe_print(f"❌ Erro ao abrir '{shp}': {e}")
+
+        return datas
+
+    else:
+        ds = ogr.Open(vsi)
+        return [ds] if ds and ds.GetLayerCount() > 0 else []
 
 # Verifica se produto já existe na tabela
 def check_product_exists(ds, table_name, metadata_id):
@@ -240,68 +277,73 @@ def remove_all_geometries_with_metadataid(ds, table_name, metadata_id):
 
 # Importa o arquivo
 def importar_para_tabela(file_path, table_name, xml=None):
-    if file_path.lower().endswith(".xml"):
-        safe_print(f"📄 Arquivo XML detectado (não vetorial): {file_path} - ignorado.")
-        return
-
     safe_print(f"\n📦 Importando: {os.path.basename(file_path)}")
 
+    # metadados
     escala, data_do_produto, esquema, metadata_id = extract_metadata_from_xml(xml)
     if not metadata_id:
         metadata_id = os.path.basename(file_path)
 
-    datasource = abrir_datasource(file_path)
-    if datasource is None or datasource.GetLayerCount() == 0:
-        safe_print(f"⚠️ Ignorando arquivo (sem vetores): {file_path}")
+    # abre TODOS os datasources
+    datasources = abrir_datasources(file_path)
+    if not datasources:
+        safe_print(f"⚠️ Ignorando '{file_path}': sem vetores suportados.")
         return
 
-    conn_str = "PG: " + ' '.join(f"{k}={v}" for k, v in CONFIG_BANCO.items())
+    # abre OGR/PostGIS de saída
+    conn_str = "PG: " + " ".join(f"{k}={v}" for k,v in CONFIG_BANCO.items())
     ds_out = ogr.Open(conn_str, update=1)
-    if ds_out is None:
+    if not ds_out:
         raise RuntimeError("❌ Falha na conexão com banco de dados.")
+    layer_out = ds_out.GetLayerByName(table_name)
 
+    # remove antigos
     if check_product_exists(ds_out, table_name, metadata_id):
-        safe_print("🔁 Dados existentes encontrados. Removendo para substituir.")
+        safe_print("🔁 Removendo feições antigas…")
         remove_all_geometries_with_metadataid(ds_out, table_name, metadata_id)
 
-    layer_out = ds_out.GetLayerByName(table_name)
     count = 0
+    # percorre cada DataSource e cada camada
+    for ds in datasources:
+        for layer in ds:
+            nome_classe = layer.GetName()
+            for feat in layer:
+                geom = feat.GetGeometryRef()
+                if not geom: 
+                    continue
+                # normaliza multipartes
+                gt = geom.GetGeometryType()
+                if gt in (ogr.wkbPoint, ogr.wkbPoint25D):
+                    geom = ogr.ForceToMultiPoint(geom)
+                elif gt in (ogr.wkbLineString, ogr.wkbLineString25D):
+                    geom = ogr.ForceToMultiLineString(geom)
+                elif gt in (ogr.wkbPolygon, ogr.wkbPolygon25D):
+                    geom = ogr.ForceToMultiPolygon(geom)
 
-    for layer in datasource:
-        nome_classe = layer.GetName()
-        for feature in layer:
-            geom = feature.GetGeometryRef()
-            if not geom:
-                continue
+                props = json.loads(feat.ExportToJson())["properties"]
+                clean = {
+                    k: str(v).encode("utf-8", errors="replace")
+                          .decode("utf-8", errors="replace")
+                    if v is not None else None
+                    for k,v in props.items()
+                }
+                json_attr = json.dumps(clean, ensure_ascii=False)
 
-            # Converter para tipos multiparte
-            geom_type = geom.GetGeometryType()
-            if geom_type in [ogr.wkbPoint, ogr.wkbPoint25D]:
-                geom = ogr.ForceToMultiPoint(geom)
-            elif geom_type in [ogr.wkbLineString, ogr.wkbLineString25D]:
-                geom = ogr.ForceToMultiLineString(geom)
-            elif geom_type in [ogr.wkbPolygon, ogr.wkbPolygon25D]:
-                geom = ogr.ForceToMultiPolygon(geom)
+                fo = ogr.Feature(layer_out.GetLayerDefn())
+                fo.SetField("json", json_attr)
+                fo.SetField("classe", nome_classe)
+                fo.SetField("metadata_id", metadata_id)
+                fo.SetField("escala", escala)
+                fo.SetField("data_do_produto", data_do_produto)
+                fo.SetField("esquema", esquema)
+                fo.SetGeometry(geom)
+                layer_out.CreateFeature(fo)
+                count += 1
 
-            props = json.loads(feature.ExportToJson()).get("properties", {})
-            props_corrigidos = {
-                k: str(v).encode("utf-8", errors="replace").decode("utf-8", errors="replace")
-                if v is not None else None for k, v in props.items()
-            }
-            json_atributos = json.dumps(props_corrigidos, ensure_ascii=False)
+        # fecha DataSource auxiliar
+        ds = None
 
-            feat_out = ogr.Feature(layer_out.GetLayerDefn())
-            feat_out.SetField("json", json_atributos)
-            feat_out.SetField("classe", nome_classe)
-            feat_out.SetField("metadata_id", metadata_id)
-            feat_out.SetField("escala", escala)
-            feat_out.SetField("data_do_produto", data_do_produto)
-            feat_out.SetField("esquema", esquema)
-            feat_out.SetGeometry(geom)
-            layer_out.CreateFeature(feat_out)
-
-            count += 1
-
+    # fecha saída
     ds_out = None
     safe_print(f"✅ {count} feições importadas de '{os.path.basename(file_path)}'.")
 
