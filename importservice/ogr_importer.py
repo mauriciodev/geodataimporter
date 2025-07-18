@@ -70,7 +70,7 @@ def safe_print(msg):
     print(msg, flush=True)
 
 # Criação da tabela caso não exista
-def verificar_ou_criar_tabela(table_name, conn_str, srid=4326):
+def verificar_ou_criar_tabela(table_name, conn_str, srid=3857):
     ds = ogr.Open(conn_str, update=1)
     if ds is None:
         raise RuntimeError("❌ Não foi possível conectar ao banco.")
@@ -150,7 +150,7 @@ def criar_indices_pos_importacao(table_name):
     except Exception as e:
         print(f"❌ Erro ao criar índices na tabela {table_name}: {e}")
 
-'''def registrar_geometry_column_postgis(table_name, column_name="wkb_geometry", srid=4326, geom_type="GEOMETRY", dim=2):
+'''def registrar_geometry_column_postgis(table_name, column_name="wkb_geometry", srid=3857, geom_type="GEOMETRY", dim=2):
     try:
         conn = psycopg2.connect(**CONFIG_BANCO)
         cursor = conn.cursor()
@@ -309,8 +309,16 @@ def importar_para_tabela(file_path, table_name, xml=None):
             nome_classe = layer.GetName()
             for feat in layer:
                 geom = feat.GetGeometryRef()
-                if not geom: 
+                if not geom:
                     continue
+
+                # Reprojetar para EPSG:3857
+                source_srs = layer.GetSpatialRef()
+                target_srs = osr.SpatialReference()
+                target_srs.ImportFromEPSG(3857)
+                transform = osr.CoordinateTransformation(source_srs, target_srs)
+                geom.Transform(transform)
+
                 # normaliza multipartes
                 gt = geom.GetGeometryType()
                 if gt in (ogr.wkbPoint, ogr.wkbPoint25D):
