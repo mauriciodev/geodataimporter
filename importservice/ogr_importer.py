@@ -4,10 +4,10 @@ import zipfile
 import xml.etree.ElementTree as ET
 from osgeo import ogr, osr
 from dotenv import load_dotenv
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 ogr.UseExceptions()
 
 # Configurações do banco
