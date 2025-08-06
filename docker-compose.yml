@@ -38,7 +38,7 @@ services:
     geodataimporter:
         build: .
         volumes:
-            - '${PWD}://usr/src/app'
+            - '${PWD}:/usr/src/app'
         ports:
             - '8000:8000'
         environment:
@@ -47,4 +47,5 @@ services:
             DB_NAME: geodataimporter
             DB_HOST: postgis
             DB_PORT: 5432
-
+        depends_on:
+            - postgis
