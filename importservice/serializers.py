@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     HistoricoImportacaoExclusao,
     ProdutoGeoespacial,
-    product_index
+    product_index,
+    RepresentacaoGrafica
 )
 
 
@@ -23,4 +24,9 @@ class ProdutoGeoespacialSerializer(serializers.ModelSerializer):
 class ProductIndexSerializer(serializers.ModelSerializer):
     class Meta:
         model = product_index
+        fields = '__all__'
+
+class RepresentacaoGrafica(serializers.ModelSerializer):
+    class Meta:
+        model = RepresentacaoGrafica
         fields = '__all__'

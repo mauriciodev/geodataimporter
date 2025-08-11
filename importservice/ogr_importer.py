@@ -97,7 +97,8 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=3857):
             ("metadata_id", ogr.OFTString),
             ("escala", ogr.OFTString),
             ("data_do_produto", ogr.OFTDate),
-            ("esquema", ogr.OFTString)
+            ("esquema", ogr.OFTString),
+            ("graphic_representation_group", ogr.OFTString)
         ]
 
         for nome, tipo in campos:
@@ -344,6 +345,7 @@ def importar_para_tabela(file_path, table_name, xml=None):
                 fo.SetField("escala", escala)
                 fo.SetField("data_do_produto", data_do_produto)
                 fo.SetField("esquema", esquema)
+                fo.SetField("graphic_representation_group","")
                 fo.SetGeometry(geom)
                 layer_out.CreateFeature(fo)
                 count += 1

@@ -22,8 +22,8 @@ class HistoricoImportacaoExclusao(models.Model):
         ('removido', 'Removido'),
     ]
 
-    metadata_id = models.CharField(max_length=255)
-    classe = models.CharField(max_length=255, null=True, blank=True)
+    metadata_id = models.CharField(max_length=256)
+    classe = models.CharField(max_length=256, null=True, blank=True)
     acao = models.CharField(max_length=10, choices=ACAO_CHOICES)
     data_evento = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(
@@ -50,3 +50,11 @@ class ProdutoGeoespacial(models.Model):
 
     def __str__(self):
         return f"{self.metadata_id} ({self.data_do_produto})"
+
+class RepresentacaoGrafica(models.Model):
+    esquema = models.CharField(max_length=256, null=True, blank=True)
+    classe = models.CharField(max_length=256, null=True, blank=True)
+    representacao_grafica = models.CharField(max_length=256, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.classe} ({self.esquema})"
