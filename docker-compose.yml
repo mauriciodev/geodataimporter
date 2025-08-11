@@ -2,7 +2,7 @@ services:
     qgis-server: #map server
         image: camptocamp/qgis-server
         volumes:
-            - ${PWD}/data/qgis:/etc/qgisserver:ro
+            - ./data/qgis:/etc/qgisserver:ro
         environment:
             - LANG=en_EN.UTF-8
             - QGIS_PROJECT_FILE=/etc/qgisserver/project.qgz
@@ -20,9 +20,9 @@ services:
         user: root
         # POSTGIS VOLUME IS NOT CONFIGURED BECAUSE DATA FOLDER CANNOT BE INSIDE THE SRC FOLDER
         volumes:
-            - '${PWD}/data/postgres:/var/lib/postgresql/data'
-            #- '${PWD}/logs/postgres:/var/log/postgresql/'
-            #- '${PWD}/configs/create_databases.sh:/docker-entrypoint-initdb.d/create_databases.sh'
+            - './data/postgres:/var/lib/postgresql/data'
+            #- './logs/postgres:/var/log/postgresql/'
+            #- './configs/create_databases.sh:/docker-entrypoint-initdb.d/create_databases.sh'
         logging:
             options:
                 max-size: 1g
@@ -38,7 +38,7 @@ services:
     geodataimporter:
         build: .
         volumes:
-            - '${PWD}:/usr/src/app'
+            - '.:/usr/src/app'
         ports:
             - '8000:8000'
         environment:

@@ -190,3 +190,5 @@ Thumbs.db
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
+
+data/
