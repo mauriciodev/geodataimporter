@@ -1,6 +1,6 @@
 from django.contrib import admin
-from importservice.models import product_index
 
+from importservice.models import RepresentacaoGrafica
 
 # Register your models here.
-admin.site.register(product_index)
+admin.site.register(RepresentacaoGrafica)
