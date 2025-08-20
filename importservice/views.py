@@ -1,5 +1,5 @@
 from django.utils import timezone
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, status, viewsets
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -13,6 +13,33 @@ from urllib.parse import unquote_plus
 from .models import HistoricoImportacaoExclusao, ProdutoGeoespacial, RepresentacaoGrafica
 from .serializers import HistoricoImportacaoExclusaoSerializer, ProdutoGeoespacialSerializer, RepresentacaoGraficaSerializer
 from . import ogr_importer
+
+
+# ------------------------ API ROOT ------------------------
+class ApiRootView(APIView):
+    def get(self, request):
+        return Response({
+            "mensagem": "API Geodataimporter funcionando.",
+            "endpoints": {
+                "importar": "/api/importar/",
+                "remover": "/api/remover/{metadata_id}/",
+                "produtos": "/api/produtos/",
+                "historico": "/api/historico/",
+                "representacoes-bulk": "/api/representacoes/bulk-update/"
+            }
+        })
+
+
+# ------------------------ HISTÓRICO ------------------------
+class ListarHistoricoView(APIView):
+    def get(self, request):
+        try:
+            historico = HistoricoImportacaoExclusao.objects.all().order_by('-data_evento')[:200]
+            serializer = HistoricoImportacaoExclusaoSerializer(historico, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            ogr_importer.safe_print(f"Erro ao listar histórico: {e}")
+            return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ------------------------ UPLOAD ------------------------
@@ -258,8 +285,7 @@ class ListarProdutosView(APIView):
             ogr_importer.safe_print(f"Erro ao listar produtos: {e}")
             return Response({"erro": f"Erro ao listar produtos: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-# ------------------------ HISTÓRICO ------------------------
+# ------------------------ LISTAR HISTÓRICO ------------------------
 class ListarHistoricoView(APIView):
     def get(self, request):
         try:
@@ -271,7 +297,6 @@ class ListarHistoricoView(APIView):
             return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# ------------------------ API ROOT ------------------------
 class ApiRootView(APIView):
     def get(self, request):
         return Response({
@@ -280,25 +305,14 @@ class ApiRootView(APIView):
                 "importar": "/api/importar/",
                 "remover": "/api/remover/{metadata_id}/",
                 "produtos": "/api/produtos/",
-                "historico-importacoes": "/api/historico-importacoes/",
-                "representacao-grafica": "/api/representacao-grafica/",
-                "representacao-grafica-bulk": "/api/representacao-grafica/bulk-update/"
+                "historico-importacoes": "/api/historico-importacoes/"
             }
         })
 
-
-# ------------------------ REPRESENTAÇÃO GRÁFICA ------------------------
-class RepresentacaoGraficaListCreateView(generics.ListCreateAPIView):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
-class RepresentacaoGraficaDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
+# ------------------------ BULK UPDATE REPRESENTAÇÕES ------------------------
 class RepresentacaoGraficaBulkUpdateView(APIView):
     @swagger_auto_schema(
-        operation_description="Atualização em massa dos grupos de representação gráfica",
+        operation_description="Atualiza os grupos de representação gráfica existentes",
         request_body=openapi.Schema(
             type=openapi.TYPE_ARRAY,
             items=openapi.Schema(
@@ -307,52 +321,48 @@ class RepresentacaoGraficaBulkUpdateView(APIView):
                     'esquema': openapi.Schema(type=openapi.TYPE_STRING),
                     'classe': openapi.Schema(type=openapi.TYPE_STRING),
                     'grupo_representacao': openapi.Schema(type=openapi.TYPE_STRING),
-                }
+                },
+                required=['esquema', 'classe', 'grupo_representacao']
             )
-        )
+        ),
+        responses={200: "Atualização concluída"}
     )
     def put(self, request):
         data = request.data
         resultados = []
-        
-        for item in data:
-            try:
-                if item['grupo_representacao'] not in dict(RepresentacaoGrafica.TIPO_GRUPO_CHOICES):
-                    raise ValueError(f"Grupo de representação inválido: {item['grupo_representacao']}")
 
-                obj, created = RepresentacaoGrafica.objects.update_or_create(
-                    esquema=item['esquema'],
-                    classe=item['classe'],
-                    defaults={'grupo_representacao': item['grupo_representacao']}
-                )
-                
+        for item in data:
+            esquema = item.get('esquema')
+            classe = item.get('classe')
+            grupo = item.get('grupo_representacao')
+
+            try:
+                obj = RepresentacaoGrafica.objects.get(esquema=esquema, classe=classe)
+                if grupo not in dict(RepresentacaoGrafica.TIPO_GRUPO_CHOICES):
+                    raise ValueError(f"Grupo inválido: {grupo}")
+
+                obj.grupo_representacao = grupo
+                obj.save()
+
                 resultados.append({
-                    'esquema': item['esquema'],
-                    'classe': item['classe'],
-                    'status': 'criado' if created else 'atualizado',
-                    'grupo_representacao': obj.grupo_representacao
+                    'esquema': esquema,
+                    'classe': classe,
+                    'status': 'atualizado',
+                    'grupo_representacao': grupo
                 })
-                
+            except RepresentacaoGrafica.DoesNotExist:
+                resultados.append({
+                    'esquema': esquema,
+                    'classe': classe,
+                    'status': 'erro',
+                    'erro': 'Registro não encontrado'
+                })
             except Exception as e:
                 resultados.append({
-                    'esquema': item.get('esquema'),
-                    'classe': item.get('classe'),
+                    'esquema': esquema,
+                    'classe': classe,
                     'status': 'erro',
                     'erro': str(e)
                 })
-        
+
         return Response(resultados)
-
-
-# ------------------------ VIEWSETS ------------------------
-class ProdutoGeoespacialViewSet(viewsets.ModelViewSet):
-    queryset = ProdutoGeoespacial.objects.all()
-    serializer_class = ProdutoGeoespacialSerializer
-
-class RepresentacaoGraficaViewSet(viewsets.ModelViewSet):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
-class HistoricoImportacaoExclusaoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = HistoricoImportacaoExclusao.objects.all().order_by('-data_evento')
-    serializer_class = HistoricoImportacaoExclusaoSerializer
