@@ -1,21 +1,21 @@
 from django.utils import timezone
-from rest_framework import generics, viewsets, status
+from .models import HistoricoImportacaoExclusao
+from .serializers import HistoricoImportacaoExclusaoSerializer
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from rest_framework import status
 from django.conf import settings
 import os
 import psycopg2
 from urllib.parse import unquote_plus
 
-from .models import HistoricoImportacaoExclusao, ProdutoGeoespacial, RepresentacaoGrafica
-from .serializers import HistoricoImportacaoExclusaoSerializer, ProdutoGeoespacialSerializer, RepresentacaoGraficaSerializer
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from . import ogr_importer
 
 
-# ------------------------ UPLOAD ------------------------
 class UploadArquivoView(APIView):
     parser_classes = [MultiPartParser]
 
@@ -128,7 +128,6 @@ class UploadArquivoView(APIView):
         return Response(resultados)
 
 
-# ------------------------ REMOVER ------------------------
 class RemoverProdutoView(APIView):
     @swagger_auto_schema(
         operation_description="Remove feições por metadata_id. Opcionalmente, filtra por classe.",
@@ -195,7 +194,6 @@ class RemoverProdutoView(APIView):
             return Response({"erro": f"Erro ao remover: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# ------------------------ LISTAR PRODUTOS ------------------------
 class ListarProdutosView(APIView):
     @swagger_auto_schema(
         operation_description="Lista produtos importados. Filtra opcionalmente por metadata_id e classe.",
@@ -259,7 +257,6 @@ class ListarProdutosView(APIView):
             return Response({"erro": f"Erro ao listar produtos: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# ------------------------ HISTÓRICO ------------------------
 class ListarHistoricoView(APIView):
     def get(self, request):
         try:
@@ -271,7 +268,6 @@ class ListarHistoricoView(APIView):
             return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# ------------------------ API ROOT ------------------------
 class ApiRootView(APIView):
     def get(self, request):
         return Response({
@@ -280,79 +276,6 @@ class ApiRootView(APIView):
                 "importar": "/api/importar/",
                 "remover": "/api/remover/{metadata_id}/",
                 "produtos": "/api/produtos/",
-                "historico-importacoes": "/api/historico-importacoes/",
-                "representacao-grafica": "/api/representacao-grafica/",
-                "representacao-grafica-bulk": "/api/representacao-grafica/bulk-update/"
+                "historico-importacoes": "/api/historico-importacoes/"
             }
         })
-
-
-# ------------------------ REPRESENTAÇÃO GRÁFICA ------------------------
-class RepresentacaoGraficaListCreateView(generics.ListCreateAPIView):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
-class RepresentacaoGraficaDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
-class RepresentacaoGraficaBulkUpdateView(APIView):
-    @swagger_auto_schema(
-        operation_description="Atualização em massa dos grupos de representação gráfica",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_ARRAY,
-            items=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'esquema': openapi.Schema(type=openapi.TYPE_STRING),
-                    'classe': openapi.Schema(type=openapi.TYPE_STRING),
-                    'grupo_representacao': openapi.Schema(type=openapi.TYPE_STRING),
-                }
-            )
-        )
-    )
-    def put(self, request):
-        data = request.data
-        resultados = []
-        
-        for item in data:
-            try:
-                if item['grupo_representacao'] not in dict(RepresentacaoGrafica.TIPO_GRUPO_CHOICES):
-                    raise ValueError(f"Grupo de representação inválido: {item['grupo_representacao']}")
-
-                obj, created = RepresentacaoGrafica.objects.update_or_create(
-                    esquema=item['esquema'],
-                    classe=item['classe'],
-                    defaults={'grupo_representacao': item['grupo_representacao']}
-                )
-                
-                resultados.append({
-                    'esquema': item['esquema'],
-                    'classe': item['classe'],
-                    'status': 'criado' if created else 'atualizado',
-                    'grupo_representacao': obj.grupo_representacao
-                })
-                
-            except Exception as e:
-                resultados.append({
-                    'esquema': item.get('esquema'),
-                    'classe': item.get('classe'),
-                    'status': 'erro',
-                    'erro': str(e)
-                })
-        
-        return Response(resultados)
-
-
-# ------------------------ VIEWSETS ------------------------
-class ProdutoGeoespacialViewSet(viewsets.ModelViewSet):
-    queryset = ProdutoGeoespacial.objects.all()
-    serializer_class = ProdutoGeoespacialSerializer
-
-class RepresentacaoGraficaViewSet(viewsets.ModelViewSet):
-    queryset = RepresentacaoGrafica.objects.all()
-    serializer_class = RepresentacaoGraficaSerializer
-
-class HistoricoImportacaoExclusaoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = HistoricoImportacaoExclusao.objects.all().order_by('-data_evento')
-    serializer_class = HistoricoImportacaoExclusaoSerializer
