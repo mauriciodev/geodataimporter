@@ -9,7 +9,7 @@ from django.conf import settings
 import os
 import psycopg2
 from urllib.parse import unquote_plus
-
+from django.db import transaction
 from .models import HistoricoImportacaoExclusao, ProdutoGeoespacial, RepresentacaoGrafica
 from .serializers import HistoricoImportacaoExclusaoSerializer, ProdutoGeoespacialSerializer, RepresentacaoGraficaSerializer
 from . import ogr_importer
@@ -331,38 +331,57 @@ class RepresentacaoGraficaBulkUpdateView(APIView):
         data = request.data
         resultados = []
 
-        for item in data:
-            esquema = item.get('esquema')
-            classe = item.get('classe')
-            grupo = item.get('grupo_representacao')
+        with transaction.atomic():
+            for item in data:
+                esquema = item.get('esquema')
+                classe = item.get('classe')
+                grupo = item.get('grupo_representacao')
 
-            try:
-                obj = RepresentacaoGrafica.objects.get(esquema=esquema, classe=classe)
-                if grupo not in dict(RepresentacaoGrafica.TIPO_GRUPO_CHOICES):
-                    raise ValueError(f"Grupo inválido: {grupo}")
+                try:
+                    # Valida se grupo existe
+                    if grupo not in dict(RepresentacaoGrafica.TIPO_GRUPO_CHOICES):
+                        raise ValueError(f"Grupo inválido: {grupo}")
 
-                obj.grupo_representacao = grupo
-                obj.save()
+                    # Busca o registro
+                    obj = RepresentacaoGrafica.objects.get(esquema=esquema, classe=classe)
+                    obj.grupo_representacao = grupo
+                    obj.save()
 
-                resultados.append({
-                    'esquema': esquema,
-                    'classe': classe,
-                    'status': 'atualizado',
-                    'grupo_representacao': grupo
-                })
-            except RepresentacaoGrafica.DoesNotExist:
-                resultados.append({
-                    'esquema': esquema,
-                    'classe': classe,
-                    'status': 'erro',
-                    'erro': 'Registro não encontrado'
-                })
-            except Exception as e:
-                resultados.append({
-                    'esquema': esquema,
-                    'classe': classe,
-                    'status': 'erro',
-                    'erro': str(e)
-                })
+                    resultados.append({
+                        'esquema': esquema,
+                        'classe': classe,
+                        'status': 'atualizado',
+                        'grupo_representacao': grupo
+                    })
+                except RepresentacaoGrafica.DoesNotExist:
+                    resultados.append({
+                        'esquema': esquema,
+                        'classe': classe,
+                        'status': 'erro',
+                        'erro': 'Registro não encontrado'
+                    })
+                except Exception as e:
+                    resultados.append({
+                        'esquema': esquema,
+                        'classe': classe,
+                        'status': 'erro',
+                        'erro': str(e)
+                    })
 
-        return Response(resultados)
+        return Response(resultados, status=status.HTTP_200_OK)
+    
+    # ------------------------ LISTAR GRUPOS DE REPRESENTAÇÃO ------------------------
+class ListarGruposRepresentacaoView(APIView):
+    @swagger_auto_schema(
+        operation_description="Lista todos os grupos de representação gráfica cadastrados",
+        responses={200: "Lista de grupos de representação"}
+    )
+    def get(self, request):
+        try:
+            registros = RepresentacaoGrafica.objects.all().values(
+                'esquema', 'classe', 'grupo_representacao'
+            )
+            return Response(list(registros))
+        except Exception as e:
+            ogr_importer.safe_print(f"Erro ao listar grupos de representação: {e}")
+            return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
