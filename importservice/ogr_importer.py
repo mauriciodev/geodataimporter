@@ -21,86 +21,7 @@ CONFIG_BANCO = {**CONFIG_BASE, "dbname": os.getenv("DB_NAME")}
 TABELA_GLOBAL = "importacao_geometrias"
 PASTA_ARQUIVOS = os.getenv("PASTA_ARQUIVOS")
 
-ET_EDGV_GROUPS = {
-    # Ferrovias
-    "TRA_Trecho_Ferroviario_L": "ferrovia",
-    "FER_Trecho_Ferroviario_L": "ferrovia",
-    "EDF_Edif_Metro_Ferroviaria_P": "ferrovia",
 
-    # Rodovias
-    "TRA_Trecho_Rodoviario_L": "rodovia",
-    "ROD_Trecho_Rodoviario": "rodovia",
-    "EDF_Edif_Rodoviaria_P": "rodovia",
-
-    # Vias secundárias / arruamento
-    "TRA_Arruamento_L": "arruamento",
-    "TRA_Caminho_Carrocavel_L": "caminho_carrocavel",
-
-    # Infraestrutura associada
-    "TRA_Passagem_Elevada_Viaduto_L": "viaduto",
-    "TRA_Passagem_Elevada_Viaduto_P": "viaduto",
-    "TRA_Ponte_L": "ponte",
-    "TRA_Ponte_P": "ponte_pedestre",
-    "TRA_Travessia_Pedestre_P": "ponte_pedestre",
-    "TRA_Tunel_L": "tunnel",
-    "TRA_Tunel_P": "tunnel",
-
-    # Drenagem / corpos d’água
-    "HID_Trecho_Drenagem_L": "drenagem",
-    "HID_Massa_Dagua_A": "corpo_dagua",
-    "HID_Barragem_L": "corpo_dagua",
-    "HID_Sumidouro_Vertedouro_P": "corpo_dagua",
-
-    # Edificações
-    "LOC_Area_Edificada_A": "edificacao",
-    "EDF_Edificacao_A": "edificacao",
-    "EDF_Edif_Constr_Lazer_P": "edificacao",
-    "EDF_Edif_Constr_Turistica_P": "edificacao",
-    "EDF_Edif_Ensino_A": "edificacao",
-    "EDF_Edif_Ensino_P": "edificacao",
-    "EDF_Edif_Industrial_A": "edificacao",
-    "EDF_Edif_Industrial_P": "edificacao",
-    "EDF_Edif_Policia_P": "edificacao",
-    "EDF_Edif_Pub_Civil_P": "edificacao",
-    "EDF_Edif_Pub_Militar_P": "edificacao",
-    "EDF_Edif_Religiosa_P": "edificacao",
-    "EDF_Edif_Agropec_Ext_Vegetal_Pesca_A": "edificacao",
-    "EDF_Edif_Agropec_Ext_Vegetal_Pesca_P": "edificacao",
-    "EDF_Edif_Energia_P": "edificacao",
-    "EDF_Edif_Saude_P": "edificacao",
-    "EDF_Edif_Saneamento_P": "saneamento",
-    "EDF_Edif_Aeroporto_P": "aeroporto",
-    "EDF_Edif_Rodoviaria_P": "rodovia",  
-
-    # Limites / localidades
-    "LOC_Nome_Local_P": "limite",
-    "LML_Area_Desamente_Edificada_A": "limite",
-    "LML_Nome_Local_P": "limite",
-    "LML_Posic_Geo_Localidade_P": "limite",
-    "LML_Unidade_Federacao_A": "limite",
-
-    # Vegetação
-    "VEG_Campo_A": "vegetacao",
-    "VEG_Floresta_A": "vegetacao",
-    "VEG_Veg_Cultivada_A": "vegetacao",
-    "LAZ_Campo_Quadra_A": "vegetacao",
-    "LAZ_Campo_Quadra_P": "vegetacao",
-
-    # Energia / infraestrutura
-    "ENC_Trecho_Energia_L": "energia",
-    "ENC_Subest_Transm_Distrib_Energia_Eletrica_A": "energia",
-    "ENC_Torre_Comunic_P": "energia",
-    "ENC_Torre_Energia_P": "energia",
-
-    # Relevo / topografia
-    "REL_Curva_Nivel_L": "relevo",
-    "REL_Elemento_Fisiografica_Natural_L": "relevo",
-    "REL_Ponto_Cotado_Altimetrico_P": "relevo",
-
-    # Outras edificações especiais
-    "EDF_Edif_Desenv_Social_P": "edificacao",
-    "EDF_Edif_Metro_Ferroviaria_P": "ferrovia",  
-}
 
 def criar_banco_postgis(nome_banco):
     try:
@@ -357,8 +278,8 @@ def check_product_exists(ds, table_name, metadata_id):
 def remove_all_geometries_with_metadataid(ds, table_name, metadata_id):
     ds.ExecuteSQL(f"DELETE FROM {table_name} WHERE metadata_id = '{metadata_id}'")
 
-# Importa o arquivo
-def importar_para_tabela(file_path, table_name, xml=None):
+# Importa o arquivo 
+def importar_para_tabela(file_path, table_name, xml=None, ET_EDGV_GROUPS={}):
     safe_print(f"\n📦 Importando: {os.path.basename(file_path)}")
 
     # metadados
@@ -445,6 +366,8 @@ def find_xml_for_file(caminho_arquivo):
     caminho_xml = base + ".xml"
     return caminho_xml if os.path.exists(caminho_xml) else None
 
+
+
 # Execução principal
 if __name__ == "__main__":
     nome_banco = CONFIG_BANCO["dbname"]
@@ -470,3 +393,4 @@ if __name__ == "__main__":
             safe_print(f"❌ Erro ao processar '{caminho}': {e}")
 
     safe_print("🚀 Processo finalizado.")
+
