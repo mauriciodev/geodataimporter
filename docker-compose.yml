@@ -34,6 +34,11 @@ services:
             PGDATA: /var/lib/postgresql/data
         image: postgis/postgis
         command: ["postgres"] #, "-c", "logging_collector=on", "-c", "log_statement=none", "-c", "log_directory=/var/log/postgresql/"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            retries: 5
+            start_period: 10s
 
     geodataimporter:
         build: .
@@ -48,4 +53,6 @@ services:
             DB_HOST: postgis
             DB_PORT: 5432
         depends_on:
-            - postgis
+            postgis:
+                condition: service_healthy
+        restart: always
