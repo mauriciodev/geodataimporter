@@ -55,3 +55,6 @@ copy .env.example .env  # Windows
 
 ## 4 Execute o script de importação
 python ogr_importer.py
+
+## Editando o projeto no QGIS Desktop
+Foi adicionado o endereço postgis para o localhost a fim de simular a conexão ao conteiner postgis para configurar o projeto no qgis desktop 
