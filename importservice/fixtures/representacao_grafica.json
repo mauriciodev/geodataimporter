@@ -1,0 +1,524 @@
+[
+{
+  "model": "importservice.representacaografica",
+  "pk": 1,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "TRA_Trecho_Ferroviario_L",
+    "grupo_representacao": "ferrovia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 2,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "FER_Trecho_Ferroviario_L",
+    "grupo_representacao": "ferrovia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 3,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Metro_Ferroviaria_P",
+    "grupo_representacao": "ferrovia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 8,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Trecho_Rodoviario_L",
+    "grupo_representacao": "rodovia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 9,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "TRA_Arruamento_L",
+    "grupo_representacao": "arruamento"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 10,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "TRA_Ponte_L",
+    "grupo_representacao": "ponte"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 11,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "TRA_Tunel_L",
+    "grupo_representacao": "tunel"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 12,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "HID_Trecho_Drenagem_L",
+    "grupo_representacao": "drenagem"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 13,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "HID_Massa_Dagua_A",
+    "grupo_representacao": "corpo_dagua"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 14,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "LOC_Area_Edificada_A",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 15,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "LOC_Nome_Local_P",
+    "grupo_representacao": "limite"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 16,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "VEG_Campo_A",
+    "grupo_representacao": "vegetacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 17,
+  "fields": {
+    "esquema": "EDGV 2.1.3",
+    "classe": "VEG_Floresta_A",
+    "grupo_representacao": "vegetacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 18,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Rodoviaria_P",
+    "grupo_representacao": "rodovia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 19,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edificacao_A",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 20,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edificacao_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 21,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Constr_Lazer_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 22,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Constr_Turistica_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 23,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Ensino_A",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 24,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Ensino_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 25,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Industrial_A",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 26,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Industrial_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 27,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Policia_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 28,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Pub_Civil_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 29,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Pub_Militar_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 30,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Religiosa_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 31,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Agropec_Ext_Vegetal_Pesca_A",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 32,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Agropec_Ext_Vegetal_Pesca_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 33,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Energia_P",
+    "grupo_representacao": "energia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 34,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Saude_P",
+    "grupo_representacao": "edificacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 35,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Saneamento_P",
+    "grupo_representacao": "saneamento"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 36,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "EDF_Edif_Abast_Agua_P",
+    "grupo_representacao": "saneamento"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 37,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "CBGE_Area_Duto_A",
+    "grupo_representacao": "outros"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 38,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "CBGE_Cemiterio_A",
+    "grupo_representacao": "outros"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 39,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "CBGE_Cemiterio_P",
+    "grupo_representacao": "outros"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 40,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "CBGE__Trecho_Arruamento_L",
+    "grupo_representacao": "arruamento"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 41,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "ENC_Trecho_Energia_L",
+    "grupo_representacao": "energia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 42,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "ENC_Subest_Transm_Distrib_Energia_Eletrica_A",
+    "grupo_representacao": "energia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 43,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "ENC_Torre_Comunic_P",
+    "grupo_representacao": "energia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 44,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "ENC_Torre_Energia_P",
+    "grupo_representacao": "energia"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 45,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "HID_Barragem_L",
+    "grupo_representacao": "corpo_dagua"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 46,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "HID_Sumidouro_Vertedouro_P",
+    "grupo_representacao": "corpo_dagua"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 47,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "VEG_Veg_Cultivada_A",
+    "grupo_representacao": "vegetacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 48,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LAZ_Campo_Quadra_A",
+    "grupo_representacao": "vegetacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 49,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LAZ_Campo_Quadra_P",
+    "grupo_representacao": "vegetacao"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 50,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LML_Area_Desamente_Edificada_A",
+    "grupo_representacao": "limite"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 51,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LML_Nome_Local_P",
+    "grupo_representacao": "limite"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 52,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LML_Posic_Geo_Localidade_P",
+    "grupo_representacao": "limite"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 53,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "LML_Unidade_Federacao_A",
+    "grupo_representacao": "limite"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 54,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "REL_Curva_Nivel_L",
+    "grupo_representacao": "curva_nivel"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 55,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "REL_Elemento_Fisiografica_Natural_L",
+    "grupo_representacao": "outros"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 56,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "REL_Ponto_Cotado_Altimetrico_P",
+    "grupo_representacao": "outros"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 57,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Caminho_Carrocavel_L",
+    "grupo_representacao": "caminho_carrocavel"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 58,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Passagem_Elevada_Viaduto_L",
+    "grupo_representacao": "viaduto"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 59,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Passagem_Elevada_Viaduto_P",
+    "grupo_representacao": "viaduto"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 60,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Ponte_P",
+    "grupo_representacao": "ponte_pedestre"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 61,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Travessia_Pedestre_P",
+    "grupo_representacao": "ponte_pedestre"
+  }
+},
+{
+  "model": "importservice.representacaografica",
+  "pk": 62,
+  "fields": {
+    "esquema": "EDGV 3.0",
+    "classe": "TRA_Tunel_P",
+    "grupo_representacao": "tunel"
+  }
+}
+]
