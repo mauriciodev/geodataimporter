@@ -2,7 +2,7 @@ services:
     qgis-server: #map server
         image: camptocamp/qgis-server
         volumes:
-            - ./data/qgis:/etc/qgisserver:ro
+            - ./qgis:/etc/qgisserver:ro
         environment:
             - LANG=en_EN.UTF-8
             - QGIS_PROJECT_FILE=/etc/qgisserver/project.qgz
