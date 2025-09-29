@@ -1,4 +1,5 @@
 import os
+import csv
 import json
 import zipfile
 import xml.etree.ElementTree as ET
@@ -18,15 +19,62 @@ CONFIG_BASE = {
     "port": os.getenv("DB_PORT"),
 }
 CONFIG_BANCO = {**CONFIG_BASE, "dbname": os.getenv("DB_NAME")}
-TABELA_GLOBAL = "importacao_geometrias"
+TABELA_GEOMETRIAS = "importacao_geometrias"
 PASTA_ARQUIVOS = os.getenv("PASTA_ARQUIVOS")
 
+# Caminho CORRETO para o CSV de grupos de representação
+CSV_GRUPOS_REPRESENTACAO = os.path.join(os.path.dirname(__file__), 'data', 'representacao_grafica.csv')
 
+def carregar_grupos_do_csv(csv_path):
+    """
+    Carrega os grupos de representação do arquivo CSV
+    Formato: {classe: grupo_representacao}
+    """
+    grupos = {}
+    try:
+        safe_print(f"📁 Carregando CSV de: {csv_path}")
+        safe_print(f"📁 Arquivo existe: {os.path.exists(csv_path)}")
+        
+        with open(csv_path, 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            safe_print(f"📋 Cabeçalhos do CSV: {reader.fieldnames}")
+            
+            for i, row in enumerate(reader):
+                classe = row['classe'].strip()
+                grupo = row['grupo_representacao'].strip()
+                grupos[classe] = grupo
+                
+                # Mostrar as primeiras 5 linhas para debug
+                if i < 5:
+                    safe_print(f"📝 Linha {i+1}: '{classe}' -> '{grupo}'")
+            
+        print(f"✅ CSV carregado: {len(grupos)} mapeamentos")
+        return grupos
+    except Exception as e:
+        print(f"❌ Erro ao carregar CSV: {e}")
+        return {}
+
+def obter_grupo_para_classe(grupos_dict, classe):
+    """
+    Obtém o grupo de representação para uma classe
+    """
+    if not classe:
+        return "OUTRO"
+    
+    classe_limpa = classe.strip()
+    grupo = grupos_dict.get(classe_limpa)
+    
+    if grupo:
+        safe_print(f"✅ Mapeado: '{classe_limpa}' -> '{grupo}'")
+        return grupo
+    else:
+        safe_print(f"⚠️ Não mapeado: '{classe_limpa}' -> OUTRO")
+        return "OUTRO"
 
 def criar_banco_postgis(nome_banco):
     try:
         conn = psycopg2.connect(
-            dbname='postgres',  # conecta no banco padrão para criar o seu
+            dbname='postgres',
             user=CONFIG_BASE['user'],
             password=CONFIG_BASE['password'],
             host=CONFIG_BASE['host'],
@@ -67,11 +115,9 @@ def ativar_postgis(nome_banco):
     except Exception as e:
         print(f"Erro ao ativar PostGIS: {e}")
 
-# Impressão segura no console
 def safe_print(msg):
     print(msg, flush=True)
 
-# Criação da tabela caso não exista
 def verificar_ou_criar_tabela(table_name, conn_str, srid=3857):
     ds = ogr.Open(conn_str, update=1)
     if ds is None:
@@ -111,6 +157,7 @@ def verificar_ou_criar_tabela(table_name, conn_str, srid=3857):
         print(f"✅ Tabela '{table_name}' criada com sucesso.")
 
     ds = None
+    
     try:
         conn_pg = psycopg2.connect(**CONFIG_BANCO)
         cur = conn_pg.cursor()
@@ -133,7 +180,6 @@ def criar_indices_pos_importacao(table_name):
         conn = psycopg2.connect(**CONFIG_BANCO)
         cursor = conn.cursor()
 
-        # Índice para a coluna "classe"
         cursor.execute(f"""
             DO $$
             BEGIN
@@ -153,34 +199,6 @@ def criar_indices_pos_importacao(table_name):
     except Exception as e:
         print(f"❌ Erro ao criar índices na tabela {table_name}: {e}")
 
-'''def registrar_geometry_column_postgis(table_name, column_name="wkb_geometry", srid=3857, geom_type="GEOMETRY", dim=2):
-    try:
-        conn = psycopg2.connect(**CONFIG_BANCO)
-        cursor = conn.cursor()
-
-        cursor.execute(f"""
-            SELECT 1 FROM geometry_columns
-            WHERE f_table_name = %s AND f_geometry_column = %s
-        """, (table_name, column_name))
-        exists = cursor.fetchone()
-
-        if not exists:
-            cursor.execute(f"""
-                SELECT AddGeometryColumn(
-                    'public', %s, %s, %s, %s, %s
-                );
-            """, (table_name, column_name, srid, geom_type, dim))
-            safe_print(f"📌 AddGeometryColumn executado com sucesso em '{table_name}.{column_name}'.")
-        else:
-            safe_print(f"ℹ️ AddGeometryColumn pulado: entrada já existe para '{table_name}.{column_name}'.")
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        safe_print(f"❌ Erro ao executar AddGeometryColumn: {e}")
-'''
-# Extração de metadados do XML
 def extrair_edgv_com_versao_oficial(xml_path, namespaces):
     try:
         tree = ET.parse(xml_path)
@@ -196,12 +214,19 @@ def extrair_edgv_com_versao_oficial(xml_path, namespaces):
         return "EDGV"
     except Exception as e:
         print(f"Erro ao processar XML (extrair_edgv): {e}")
-    return None
+    return "EDGV"  
 
 def extract_metadata_from_xml(arquivo_xml):
-    escala = data_do_produto = esquema = metadata_id = None
+    # Define valores padrão
+    escala = "Não informada"
+    data_do_produto = None
+    esquema = "EDGV"
+    metadata_id = "Não informado"
+    
     if not arquivo_xml or not os.path.exists(arquivo_xml):
+        safe_print(f"⚠️ XML não encontrado: {arquivo_xml}")
         return escala, data_do_produto, esquema, metadata_id
+    
     try:
         tree = ET.parse(arquivo_xml)
         ns = {
@@ -212,23 +237,29 @@ def extract_metadata_from_xml(arquivo_xml):
         escala_elem = tree.find('.//gmd:equivalentScale//gco:Integer', ns)
         if escala_elem is not None:
             escala = f"1:{escala_elem.text.strip()}"
+            safe_print(f"📊 Escala encontrada: {escala}")
 
         data_elem = tree.find('.//gmd:CI_Date/gmd:date/gco:Date', ns)
         if data_elem is not None:
             data_do_produto = data_elem.text.strip()
+            safe_print(f"📅 Data encontrada: {data_do_produto}")
 
         file_id_elem = tree.find('.//gmd:fileIdentifier//gco:CharacterString', ns)
         if file_id_elem is not None:
             metadata_id = file_id_elem.text.strip()
+            safe_print(f"🆔 Metadata ID encontrado: {metadata_id}")
 
-        esquema = extrair_edgv_com_versao_oficial(arquivo_xml, ns)
+        esquema_encontrado = extrair_edgv_com_versao_oficial(arquivo_xml, ns)
+        if esquema_encontrado:
+            esquema = esquema_encontrado
+            safe_print(f"📋 Esquema encontrado: {esquema}")
 
     except Exception as e:
-        print(f"Erro ao extrair metadados do XML: {e}")
+        print(f"❌ Erro ao extrair metadados do XML: {e}")
 
+    safe_print(f"📦 Metadados extraídos - Escala: {escala}, Data: {data_do_produto}, Esquema: {esquema}, Metadata ID: {metadata_id}")
     return escala, data_do_produto, esquema, metadata_id
 
-# Abre GPKG ou ZIP
 def abrir_datasources(caminho):
     ext = os.path.splitext(caminho)[1].lower()
     vsi = os.path.abspath(caminho).replace("\\", "/")
@@ -237,7 +268,6 @@ def abrir_datasources(caminho):
         root = f"/vsizip/{vsi}"
         datas = []
 
-        # log e extração dos shapefiles dentro do ZIP
         with zipfile.ZipFile(caminho, "r") as zf:
             safe_print("📁 Conteúdo do ZIP:")
             for name in zf.namelist():
@@ -267,25 +297,25 @@ def abrir_datasources(caminho):
         ds = ogr.Open(vsi)
         return [ds] if ds and ds.GetLayerCount() > 0 else []
 
-# Verifica se produto já existe na tabela
 def check_product_exists(ds, table_name, metadata_id):
     layer = ds.ExecuteSQL(
         f"SELECT 1 FROM {table_name} WHERE metadata_id = '{metadata_id}' LIMIT 1"
     )
     return layer.GetFeatureCount() > 0 if layer else False
 
-# Remove registros com mesmo metadata_id
 def remove_all_geometries_with_metadataid(ds, table_name, metadata_id):
     ds.ExecuteSQL(f"DELETE FROM {table_name} WHERE metadata_id = '{metadata_id}'")
 
-# Importa o arquivo 
-def importar_para_tabela(file_path, table_name, xml=None, ET_EDGV_GROUPS={}):
+def importar_para_tabela(file_path, table_name, xml=None, grupos_dict={}):
     safe_print(f"\n📦 Importando: {os.path.basename(file_path)}")
 
-    # metadados
+    # metadados - COM VALORES PADRÃO
     escala, data_do_produto, esquema, metadata_id = extract_metadata_from_xml(xml)
-    if not metadata_id:
+    
+    # Se metadata_id ainda for o padrão, usa o nome do arquivo
+    if metadata_id == "Não informado":
         metadata_id = os.path.basename(file_path)
+        safe_print(f"🆔 Usando nome do arquivo como Metadata ID: {metadata_id}")
 
     # abre TODOS os datasources
     datasources = abrir_datasources(file_path)
@@ -310,6 +340,11 @@ def importar_para_tabela(file_path, table_name, xml=None, ET_EDGV_GROUPS={}):
     for ds in datasources:
         for layer in ds:
             nome_classe = layer.GetName()
+            safe_print(f"🎯 Processando camada: '{nome_classe}'")
+            
+            # Obter o grupo UMA VEZ para toda a camada
+            graphic_group = obter_grupo_para_classe(grupos_dict, nome_classe)
+            
             for feat in layer:
                 geom = feat.GetGeometryRef()
                 if not geom:
@@ -347,7 +382,6 @@ def importar_para_tabela(file_path, table_name, xml=None, ET_EDGV_GROUPS={}):
                 fo.SetField("escala", escala)
                 fo.SetField("data_do_produto", data_do_produto)
                 fo.SetField("esquema", esquema)
-                graphic_group = ET_EDGV_GROUPS.get(nome_classe, "OUTRO")  # "OUTRO" se não houver mapeamento
                 fo.SetField("graphic_representation_group", graphic_group)
                 fo.SetGeometry(geom)
                 layer_out.CreateFeature(fo)
@@ -360,24 +394,34 @@ def importar_para_tabela(file_path, table_name, xml=None, ET_EDGV_GROUPS={}):
     ds_out = None
     safe_print(f"✅ {count} feições importadas de '{os.path.basename(file_path)}'.")
 
-# Busca XML correspondente
 def find_xml_for_file(caminho_arquivo):
     base = os.path.splitext(caminho_arquivo)[0]
     caminho_xml = base + ".xml"
-    return caminho_xml if os.path.exists(caminho_xml) else None
-
-
+    if os.path.exists(caminho_xml):
+        safe_print(f"📄 XML encontrado: {caminho_xml}")
+        return caminho_xml
+    else:
+        safe_print(f"⚠️ XML não encontrado para: {caminho_arquivo}")
+        return None
 
 # Execução principal
 if __name__ == "__main__":
     nome_banco = CONFIG_BANCO["dbname"]
+    
+    # Carrega os grupos do CSV
+    grupos_representacao = carregar_grupos_do_csv(CSV_GRUPOS_REPRESENTACAO)
+    
+    if not grupos_representacao:
+        safe_print("❌ ERRO: Não foi possível carregar o CSV de grupos de representação!")
+        exit(1)
+    
     # Cria banco se não existir
     criar_banco_postgis(nome_banco)
     # Ativa PostGIS no banco
     ativar_postgis(nome_banco)
     # Monta string de conexão GDAL
     conn_str = "PG: " + ' '.join(f"{k}={v}" for k, v in CONFIG_BANCO.items())
-    verificar_ou_criar_tabela(TABELA_GLOBAL, conn_str)
+    verificar_ou_criar_tabela(TABELA_GEOMETRIAS, conn_str)
 
     importar_todos = []
     for root, dirs, files in os.walk(PASTA_ARQUIVOS):
@@ -388,9 +432,8 @@ if __name__ == "__main__":
     for caminho in importar_todos:
         xml_associado = find_xml_for_file(caminho)
         try:
-            importar_para_tabela(caminho, TABELA_GLOBAL, xml_associado)
+            importar_para_tabela(caminho, TABELA_GEOMETRIAS, xml_associado, grupos_representacao)
         except Exception as e:
             safe_print(f"❌ Erro ao processar '{caminho}': {e}")
 
     safe_print("🚀 Processo finalizado.")
-
